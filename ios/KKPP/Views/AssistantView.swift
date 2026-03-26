@@ -3,6 +3,7 @@ import SwiftUI
 
 struct AssistantView: View {
     @ObservedObject var viewModel: ChatViewModel
+    @State private var manualInput = ""
 
     var body: some View {
         ZStack {
@@ -21,8 +22,24 @@ struct AssistantView: View {
                 PermissionBannerView(
                     microphoneAuthorized: viewModel.speechManager.microphoneAuthorized,
                     speechAuthorized: viewModel.speechManager.speechAuthorized,
-                    calendarGranted: viewModel.calendarManager.hasReadAccess
+                    calendarGranted: viewModel.calendarManager.hasReadAccess,
+                    connectionState: viewModel.connectionState,
+                    backendHost: AppConfig.backendHostHint
                 )
+
+                if case .disconnected = viewModel.connectionState {
+                    Button {
+                        Task {
+                            await viewModel.refreshConnectionStatus()
+                        }
+                    } label: {
+                        Label("重新检查连接", systemImage: "arrow.clockwise")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(red: 0.10, green: 0.44, blue: 0.90))
+                }
 
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -69,6 +86,23 @@ struct AssistantView: View {
                         .padding(.horizontal)
                 }
 
+                HStack(spacing: 10) {
+                    TextField("也可以直接输入一句话试试", text: $manualInput, axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1 ... 3)
+
+                    Button("发送") {
+                        let text = manualInput
+                        manualInput = ""
+                        Task {
+                            await viewModel.send(text: text)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(manualInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isProcessing)
+                }
+                .padding(.horizontal)
+
                 VStack(spacing: 10) {
                     RecordingButton(
                         isRecording: viewModel.speechManager.isRecording,
@@ -92,6 +126,7 @@ struct AssistantView: View {
                 }
                 .padding(.bottom, 12)
             }
+            .frame(maxWidth: 760)
             .padding()
         }
         .task {
@@ -103,7 +138,7 @@ struct AssistantView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("KKPP 私人秘書")
+                    Text("KKPP 私人秘书")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                     Text("语音驱动的多 Agent 日历助理")
                         .font(.subheadline)

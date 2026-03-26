@@ -5,6 +5,13 @@ struct BackendStreamResult {
     let structuredAction: StructuredAction?
 }
 
+struct HealthResponse: Decodable {
+    let ok: Bool
+    let service: String
+    let timezone: String
+    let timestamp: String
+}
+
 final class BackendService {
     private let session: URLSession
     private let baseURL: URL
@@ -13,6 +20,16 @@ final class BackendService {
     init(baseURLString: String = "http://127.0.0.1:3000") {
         self.baseURL = URL(string: baseURLString) ?? URL(string: "http://127.0.0.1:3000")!
         self.session = URLSession(configuration: .default)
+    }
+
+    var baseURLString: String {
+        baseURL.absoluteString
+    }
+
+    func healthCheck() async throws -> HealthResponse {
+        let (data, response) = try await session.data(from: baseURL.appending(path: "/health"))
+        try validate(response: response, data: data)
+        return try decoder.decode(HealthResponse.self, from: data)
     }
 
     func process(request: ProcessRequest) async throws -> ProcessResponse {
@@ -65,7 +82,7 @@ final class BackendService {
                 )
             case "error":
                 throw NSError(domain: "BackendService", code: -1, userInfo: [
-                    NSLocalizedDescriptionKey: event.message ?? "後端服務暫時無法使用。"
+                    NSLocalizedDescriptionKey: event.message ?? "后端服务暂时不可用。"
                 ])
             default:
                 continue
@@ -78,12 +95,12 @@ final class BackendService {
     private func validate(response: URLResponse, data: Data) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NSError(domain: "BackendService", code: -1, userInfo: [
-                NSLocalizedDescriptionKey: "無法識別伺服器回應。"
+                NSLocalizedDescriptionKey: "无法识别服务器响应。"
             ])
         }
 
         guard (200 ... 299).contains(httpResponse.statusCode) else {
-            let message = String(data: data, encoding: .utf8) ?? "伺服器請求失敗。"
+            let message = String(data: data, encoding: .utf8) ?? "服务器请求失败。"
             throw NSError(domain: "BackendService", code: httpResponse.statusCode, userInfo: [
                 NSLocalizedDescriptionKey: message
             ])

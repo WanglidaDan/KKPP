@@ -2,12 +2,19 @@ import Foundation
 
 @MainActor
 final class ChatViewModel: ObservableObject {
+    enum ConnectionState: Equatable {
+        case checking
+        case connected
+        case disconnected(String)
+    }
+
     @Published var messages: [ChatMessage] = [
         ChatMessage(role: .assistant, content: "你好，我是 KKPP。按住下方麦克风，直接告诉我你的日程安排，我会像私人秘书一样帮你处理。")
     ]
     @Published var liveTranscript = ""
     @Published var isProcessing = false
     @Published var errorMessage: String?
+    @Published var connectionState: ConnectionState = .checking
 
     let speechManager: SpeechManager
     let calendarManager: CalendarManager
@@ -28,9 +35,26 @@ final class ChatViewModel: ObservableObject {
         self.backendService = backendService
     }
 
+    var backendBaseURL: String {
+        backendService.baseURLString
+    }
+
     func bootstrap() async {
         await speechManager.requestPermissions()
         _ = await calendarManager.requestAccess()
+        await refreshConnectionStatus()
+    }
+
+    func refreshConnectionStatus() async {
+        connectionState = .checking
+
+        do {
+            let health = try await backendService.healthCheck()
+            connectionState = health.ok ? .connected : .disconnected("后端服务未返回可用状态。")
+        } catch {
+            let extraHint = "请确认手机和 Mac 在同一 Wi‑Fi，并且后端地址 \(backendService.baseURLString) 可访问。"
+            connectionState = .disconnected("\(error.localizedDescription)\n\(extraHint)")
+        }
     }
 
     func beginRecording(cantonesePreferred: Bool = false) async {
@@ -56,6 +80,11 @@ final class ChatViewModel: ObservableObject {
     func send(text: String) async {
         guard authManager.isSignedIn else {
             errorMessage = "请先使用 Apple 账号登录。"
+            return
+        }
+
+        if case .disconnected(let reason) = connectionState {
+            errorMessage = reason
             return
         }
 
@@ -86,9 +115,11 @@ final class ChatViewModel: ObservableObject {
             }
 
             finalizeAssistantMessage(id: assistantId, fallback: streamResult.reply)
+            connectionState = .connected
         } catch {
             removeAssistantPlaceholder(id: assistantId)
             errorMessage = error.localizedDescription
+            connectionState = .disconnected(error.localizedDescription)
             messages.append(ChatMessage(role: .assistant, content: "抱歉，刚才处理时出了点问题。你可以再说一次，我会重新帮你安排。"))
         }
 

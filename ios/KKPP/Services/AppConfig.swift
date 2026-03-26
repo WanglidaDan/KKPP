@@ -9,4 +9,12 @@ enum AppConfig {
 
         return "http://127.0.0.1:3000"
     }
+
+    static var backendHostHint: String {
+        guard let host = URL(string: backendBaseURL)?.host else {
+            return backendBaseURL
+        }
+
+        return host
+    }
 }
