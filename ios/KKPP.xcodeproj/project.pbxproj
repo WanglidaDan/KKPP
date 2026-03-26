@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0EDF3C561B02E30EF9F6B04C /* CalendarEventSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03F18A8946D66F9B719013F /* CalendarEventSummary.swift */; };
+		34ECBD7074229DE2606F2490 /* LocationWeatherManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB411D071C449461B2F25795 /* LocationWeatherManager.swift */; };
 		37F8711EBFC9F12B164E9A57 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4672C0E51BFF0F41C557CFA2 /* SpeechManager.swift */; };
 		3DF39051D09DB94CC70CAC41 /* BackendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6983744D1ED414C6A7B375E5 /* BackendService.swift */; };
 		4AE1C69D159773CA9B5D1648 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A66B610294192B95179810B5 /* Assets.xcassets */; };
@@ -22,6 +23,7 @@
 		BA48E28D94AB8B129FF18627 /* MessageBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395AAC6330F48B18575C0AF3 /* MessageBubbleView.swift */; };
 		BC710644757EDB6F36CFF082 /* ScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E96EC51DA1EBA80329A5CA36 /* ScheduleView.swift */; };
 		C65EEE571B70AAFB63A4AA41 /* ScheduleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE5765A1D1612A6C9A82CDD /* ScheduleViewModel.swift */; };
+		CC20F74A6CDA77EB36195559 /* SystemPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C73C2BDFE956A8325FAAB12 /* SystemPermissionManager.swift */; };
 		D92805821BCCF9066AE8A3E5 /* StructuredAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14C813D5B59274BE3FCFD92 /* StructuredAction.swift */; };
 		DCFDB23B91A7CAF4E33FDF7F /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BBEE127C3C4F53C6E2E1A44 /* ChatMessage.swift */; };
 		F36E16960E1E57085B882960 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9109DD07C980D64322348C0 /* ChatViewModel.swift */; };
@@ -31,6 +33,7 @@
 
 /* Begin PBXFileReference section */
 		1BBEE127C3C4F53C6E2E1A44 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		1C73C2BDFE956A8325FAAB12 /* SystemPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPermissionManager.swift; sourceTree = "<group>"; };
 		2AE5765A1D1612A6C9A82CDD /* ScheduleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleViewModel.swift; sourceTree = "<group>"; };
 		311481490172068CFCAF3C2F /* KKPP.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KKPP.entitlements; sourceTree = "<group>"; };
 		36A0FC493E836085117ECD73 /* ScheduleRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleRowView.swift; sourceTree = "<group>"; };
@@ -44,6 +47,7 @@
 		AE70F1F05E527B560E8403C6 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		B03F18A8946D66F9B719013F /* CalendarEventSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEventSummary.swift; sourceTree = "<group>"; };
 		B14C813D5B59274BE3FCFD92 /* StructuredAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StructuredAction.swift; sourceTree = "<group>"; };
+		CB411D071C449461B2F25795 /* LocationWeatherManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationWeatherManager.swift; sourceTree = "<group>"; };
 		CF1326191369DCE192E45E02 /* CalendarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarManager.swift; sourceTree = "<group>"; };
 		D8FD23AEC72F22FE8BA10A5F /* AssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantView.swift; sourceTree = "<group>"; };
 		D9109DD07C980D64322348C0 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
@@ -142,7 +146,9 @@
 			children = (
 				4B986DE3C24E9922AAECA4E9 /* AuthManager.swift */,
 				CF1326191369DCE192E45E02 /* CalendarManager.swift */,
+				CB411D071C449461B2F25795 /* LocationWeatherManager.swift */,
 				4672C0E51BFF0F41C557CFA2 /* SpeechManager.swift */,
+				1C73C2BDFE956A8325FAAB12 /* SystemPermissionManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -176,6 +182,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					D83C0FBC234B43E89083C577 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = BC723BA6714EB51F26DFB270 /* Build configuration list for PBXProject "KKPP" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -222,6 +233,7 @@
 				F36E16960E1E57085B882960 /* ChatViewModel.swift in Sources */,
 				5BE0B2C1868F6ED3DF1B5681 /* ContentView.swift in Sources */,
 				F5F0967AF036F18200017AFD /* KKPPApp.swift in Sources */,
+				34ECBD7074229DE2606F2490 /* LocationWeatherManager.swift in Sources */,
 				BA48E28D94AB8B129FF18627 /* MessageBubbleView.swift in Sources */,
 				6EE5BCB295586208E8246E09 /* PermissionBannerView.swift in Sources */,
 				8B9FC1F50C3C9EE66FC3A105 /* RecordingButton.swift in Sources */,
@@ -230,6 +242,7 @@
 				C65EEE571B70AAFB63A4AA41 /* ScheduleViewModel.swift in Sources */,
 				37F8711EBFC9F12B164E9A57 /* SpeechManager.swift in Sources */,
 				D92805821BCCF9066AE8A3E5 /* StructuredAction.swift in Sources */,
+				CC20F74A6CDA77EB36195559 /* SystemPermissionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,10 +283,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 6YT3T9ZW6F;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -371,10 +385,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 6YT3T9ZW6F;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;

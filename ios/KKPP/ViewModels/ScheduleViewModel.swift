@@ -24,4 +24,13 @@ final class ScheduleViewModel: ObservableObject {
 
         isLoading = false
     }
+
+    func eventsForDay(_ date: Date) -> [CalendarEventSummary] {
+        let calendar = Calendar(identifier: .gregorian)
+        return events.filter { event in
+            guard let start = ISO8601DateFormatter().date(from: event.startISO) else { return false }
+            return calendar.isDate(start, inSameDayAs: date)
+        }
+        .sorted { $0.startISO < $1.startISO }
+    }
 }

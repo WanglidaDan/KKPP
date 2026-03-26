@@ -9,6 +9,7 @@ final class AuthManager: NSObject, ObservableObject {
 
     private let userIdKey = "kkpp.apple.userId"
     private let displayNameKey = "kkpp.apple.displayName"
+    private let guestIdKey = "kkpp.guest.userId"
 
     override init() {
         super.init()
@@ -21,7 +22,19 @@ final class AuthManager: NSObject, ObservableObject {
             userId = storedId
             displayName = defaults.string(forKey: displayNameKey) ?? "KKPP User"
             isSignedIn = true
+            return
         }
+
+        if let guestId = defaults.string(forKey: guestIdKey), !guestId.isEmpty {
+            userId = guestId
+        } else {
+            let guestId = "guest-" + UUID().uuidString
+            userId = guestId
+            defaults.set(guestId, forKey: guestIdKey)
+        }
+
+        displayName = "Guest"
+        isSignedIn = false
     }
 
     func handleAuthorization(_ authorization: ASAuthorization) {
