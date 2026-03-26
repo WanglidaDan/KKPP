@@ -111,8 +111,8 @@ struct ScheduleView: View {
 
             HStack(spacing: 12) {
                 summaryPill(
-                    title: "未来 7 天",
-                    value: "\(viewModel.events.count) 项安排"
+                    title: dayTitleText,
+                    value: "\(selectedDayEvents.count) 项安排"
                 )
                 summaryPill(
                     title: "天气",
@@ -233,6 +233,23 @@ struct ScheduleView: View {
         formatter.locale = Locale(identifier: "zh_CN")
         formatter.dateFormat = "M月"
         return formatter.string(from: selectedDate)
+    }
+
+    private var dayTitleText: String {
+        if calendar.isDateInToday(selectedDate) {
+            return "今天"
+        }
+        if calendar.isDateInTomorrow(selectedDate) {
+            return "明天"
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "M月d日"
+        return formatter.string(from: selectedDate)
+    }
+
+    private var selectedDayEvents: [CalendarEventSummary] {
+        viewModel.eventsForDay(selectedDate)
     }
 }
 

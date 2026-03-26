@@ -166,7 +166,7 @@ final class CalendarManager: ObservableObject {
         }
 
         let calendar = Calendar(identifier: .gregorian)
-        let startDate = Date()
+        let startDate = calendar.startOfDay(for: Date())
         let endDate = calendar.date(byAdding: .day, value: days, to: startDate) ?? startDate
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: nil)
 

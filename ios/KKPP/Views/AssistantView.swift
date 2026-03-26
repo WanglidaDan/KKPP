@@ -19,19 +19,21 @@ struct AssistantView: View {
     @State private var timeDraftStart = Date()
     @State private var timeDraftEnd = Date().addingTimeInterval(3600)
     @State private var isHoldingVoice = false
+    @State private var showingCamera = false
     @State private var repeatPreview: ChatMessage.SchedulePreview?
     @State private var deletePreview: ChatMessage.SchedulePreview?
     @State private var recordingStartedAt: Date?
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
                 background
 
                 VStack(spacing: 0) {
                     topBar
                         .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                        .padding(.top, max(proxy.safeAreaInsets.top, 8) + 6)
                         .padding(.bottom, 12)
 
                     ScrollViewReader { proxy in
@@ -97,7 +99,11 @@ struct AssistantView: View {
                         .transition(.opacity.combined(with: .scale))
                 }
             }
-            .ignoresSafeArea(edges: .top)
+        }
+        .sheet(isPresented: $showingCamera) {
+            CameraPicker { _ in }
+                .ignoresSafeArea()
+        }
         .confirmationDialog("快捷操作", isPresented: $showingQuickActions, titleVisibility: .visible) {
             Button("查看今天安排") {
                 Task { await viewModel.send(text: "看看我今天的安排") }
@@ -537,18 +543,17 @@ struct AssistantView: View {
 
     private var bottomTalkBar: some View {
         VStack(spacing: 10) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    promptChip("今天安排")
-                    promptChip("新建拍摄")
-                    promptChip("总结本周")
-                }
-                .padding(.horizontal, 16)
+            HStack(spacing: 8) {
+                promptChip("今天安排")
+                promptChip("新建拍摄")
+                promptChip("总结本周")
             }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16)
 
             HStack(spacing: 12) {
                 darkIconButton(systemImage: "camera") {
-                    showingQuickActions = true
+                    showingCamera = true
                 }
 
                 Group {
@@ -918,5 +923,52 @@ private extension Color {
             blue: Double(hex & 0xFF) / 255,
             opacity: alpha
         )
+    }
+}
+
+import SwiftUI
+import UIKit
+
+struct CameraPicker: UIViewControllerRepresentable {
+    var onImagePicked: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onImagePicked: onImagePicked, dismiss: dismiss)
+    }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
+        picker.cameraCaptureMode = .photo
+        picker.delegate = context.coordinator
+        picker.allowsEditing = false
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        private let onImagePicked: (UIImage) -> Void
+        private let dismiss: DismissAction
+
+        init(onImagePicked: @escaping (UIImage) -> Void, dismiss: DismissAction) {
+            self.onImagePicked = onImagePicked
+            self.dismiss = dismiss
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            dismiss()
+        }
+
+        func imagePickerController(
+            _ picker: UIImagePickerController,
+            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+        ) {
+            if let image = info[.originalImage] as? UIImage {
+                onImagePicked(image)
+            }
+            dismiss()
+        }
     }
 }
