@@ -1,0 +1,51 @@
+name: KKPP
+options:
+  bundleIdPrefix: com.kkpp
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    PRODUCT_BUNDLE_IDENTIFIER: com.kkpp.app
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0
+    DEVELOPMENT_TEAM: ""
+targets:
+  KKPP:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: KKPP
+        excludes:
+          - Resources/Info.plist
+    info:
+      path: KKPP/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: KKPP
+        KKPPBackendBaseURL: http://192.168.1.195:3000
+        LSRequiresIPhoneOS: true
+        UIApplicationSupportsIndirectInputEvents: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSMicrophoneUsageDescription: KKPP 需要使用麦克风，让你按住说话即可快速创建日程。
+        NSSpeechRecognitionUsageDescription: KKPP 需要语音识别权限，才能实时理解你的口述日程安排。
+        NSCalendarsFullAccessUsageDescription: KKPP 需要日历权限，才能帮你新增会议、查询今天和未来行程。
+        NSCalendarsUsageDescription: KKPP 需要日历权限，才能帮你新增会议、查询今天和未来行程。
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        CODE_SIGN_ENTITLEMENTS: KKPP/Resources/KKPP.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    entitlements:
+      path: KKPP/Resources/KKPP.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
+    scheme:
+      gatherCoverageData: false
