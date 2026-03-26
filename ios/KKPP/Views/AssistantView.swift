@@ -25,8 +25,7 @@ struct AssistantView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .bottom) {
+        ZStack(alignment: .bottom) {
                 background
 
                 VStack(spacing: 0) {
@@ -60,18 +59,9 @@ struct AssistantView: View {
                                     .id(message.id)
                                 }
 
-                                if shouldShowTransparencyPanel {
-                                    inlineTransparencyPanel
+                                if shouldShowInlineStatusCard {
+                                    inlineStatusCard
                                         .transition(.move(edge: .bottom).combined(with: .opacity))
-                                }
-
-                                if !viewModel.analysisSteps.isEmpty || viewModel.isProcessing {
-                                    inlineAnalysisTrace
-                                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                                }
-
-                                if viewModel.isProcessing {
-                                    assistantProcessingCard
                                 }
 
                                 Color.clear
@@ -107,8 +97,7 @@ struct AssistantView: View {
                         .transition(.opacity.combined(with: .scale))
                 }
             }
-            .navigationBarHidden(true)
-        }
+            .ignoresSafeArea(edges: .top)
         .confirmationDialog("快捷操作", isPresented: $showingQuickActions, titleVisibility: .visible) {
             Button("查看今天安排") {
                 Task { await viewModel.send(text: "看看我今天的安排") }
@@ -439,29 +428,80 @@ struct AssistantView: View {
         .buttonStyle(.plain)
     }
 
-    private var inlineTransparencyPanel: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            statusRow(title: "处理中", isDone: viewModel.isProcessing || !viewModel.messages.isEmpty)
-            statusRow(title: "查看日程", isDone: viewModel.messages.contains { $0.schedulePreview != nil || $0.operationCard != nil })
-            statusRow(title: "日程查询完成", isDone: !viewModel.isProcessing && !viewModel.messages.isEmpty)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.04))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.04), lineWidth: 1)
-        )
-    }
-
     private var shouldShowTransparencyPanel: Bool {
         viewModel.isProcessing || !viewModel.messages.isEmpty
     }
 
+
+    private var shouldShowInlineStatusCard: Bool {
+        viewModel.isProcessing
+    }
+
+    private var inlineStatusCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("处理中…")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.58))
+                Text(statusSummaryText)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(displayAnalysisSteps, id: \.self) { step in
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color(hex: 0x10B981))
+                        Text(step)
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.48))
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.045))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.04), lineWidth: 1)
+        )
+    }
+
+    private var displayAnalysisSteps: [String] {
+        Array(viewModel.analysisSteps.suffix(2))
+    }
+
+    private var statusSummaryText: String {
+        if let last = displayAnalysisSteps.last {
+            switch last {
+            case "连接云端":
+                return "正在连接云端助手。"
+            case "整理上下文":
+                return "正在整理你的时间、上下文和设备信息。"
+            case "理解需求":
+                return "正在理解这次安排的真实意图。"
+            case "拆解日程":
+                return "正在拆解这次日程请求。"
+            case "查询日历":
+                return "正在查看你的日历安排。"
+            case "写入日历":
+                return "正在把确认后的结果写入系统日历。"
+            case "等待确认":
+                return "我已经整理好方案，等你确认。"
+            default:
+                return "正在为你生成更合适的安排。"
+            }
+        }
+
+        return "正在为你生成更合适的安排。"
+    }
 
     private func statusRow(title: String, isDone: Bool) -> some View {
         HStack(spacing: 8) {
@@ -492,23 +532,6 @@ struct AssistantView: View {
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.orange.opacity(0.12))
-        )
-    }
-
-    private var assistantProcessingCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("处理中…")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.50))
-            Text("正在综合日历、时间和上下文，为你生成更合适的安排。")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.88))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.05))
         )
     }
 
@@ -701,25 +724,6 @@ struct AssistantView: View {
 
     private var liveTranscriptText: String {
         viewModel.isRefiningVoiceInput ? viewModel.liveTranscript : viewModel.speechManager.transcript
-    }
-
-    private var inlineAnalysisTrace: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(Array(viewModel.analysisSteps.prefix(3).enumerated()), id: \.offset) { index, step in
-                HStack(spacing: 8) {
-                    Text(index < max(viewModel.analysisSteps.count - 1, 0) || !viewModel.isProcessing ? "✓" : "Q")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(index < max(viewModel.analysisSteps.count - 1, 0) || !viewModel.isProcessing ? Color(hex: 0x10B981) : .white.opacity(0.46))
-                    Text(step)
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.34))
-                        .lineLimit(2)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 8)
-        .padding(.top, 2)
     }
 
     private func recordingDurationText(referenceDate: Date = Date()) -> String {
