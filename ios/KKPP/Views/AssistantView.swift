@@ -32,50 +32,55 @@ struct AssistantView: View {
 
                 VStack(spacing: 0) {
                     topBar
-                        .padding(.horizontal, 16)
-                        .padding(.top, max(geometry.safeAreaInsets.top, 8) + 6)
-                        .padding(.bottom, 10)
+                        .padding(.horizontal, 18)
+                        .padding(.top, max(geometry.safeAreaInsets.top, 8) + 8)
+                        .padding(.bottom, 14)
 
                     ScrollViewReader { proxy in
                         VStack(spacing: 0) {
                             ScrollView(showsIndicators: false) {
-                                LazyVStack(spacing: 14) {
-                                    if viewModel.messages.isEmpty {
-                                        Color.clear
-                                            .frame(
-                                                minHeight: max(
-                                                    360,
-                                                    geometry.size.height - max(geometry.safeAreaInsets.top, 8) - 240
-                                                )
+                                LazyVStack(spacing: 16) {
+                                    if shouldShowLandingCanvas {
+                                        landingCanvas(
+                                            minHeight: max(
+                                                420,
+                                                geometry.size.height
+                                                    - max(geometry.safeAreaInsets.top, 8)
+                                                    - 260
                                             )
-                                    }
-
-                                    ForEach(viewModel.messages) { message in
-                                        MessageBubbleView(
-                                            message: message,
-                                            onEditTime: handleEditTime,
-                                            onEditRepeat: handleEditRepeat,
-                                            onDelete: handleDelete,
-                                            onAddLocation: handleAddLocation,
-                                            onSelectOperation: viewModel.selectOperationItem,
-                                            onConfirmOperation: viewModel.confirmOperation,
-                                            onCancelOperation: viewModel.cancelOperation
                                         )
-                                        .id(message.id)
-                                    }
+                                    } else {
+                                        ForEach(viewModel.messages) { message in
+                                            MessageBubbleView(
+                                                message: message,
+                                                onEditTime: handleEditTime,
+                                                onEditRepeat: handleEditRepeat,
+                                                onDelete: handleDelete,
+                                                onAddLocation: handleAddLocation,
+                                                onSelectOperation: viewModel.selectOperationItem,
+                                                onConfirmOperation: viewModel.confirmOperation,
+                                                onCancelOperation: viewModel.cancelOperation
+                                            )
+                                            .id(message.id)
+                                        }
 
-                                    if shouldShowInlineStatusCard {
-                                        inlineStatusCard
-                                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                                        if shouldShowInlineStatusCard {
+                                            inlineStatusCard
+                                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                                        }
+
+                                        if let errorMessage = viewModel.errorMessage {
+                                            inlineErrorCard(errorMessage)
+                                        }
                                     }
 
                                     Color.clear
                                         .frame(height: 1)
                                         .id("bottom-anchor")
                                 }
-                                .padding(.horizontal, 18)
-                                .padding(.top, 24)
-                                .padding(.bottom, 138)
+                                .padding(.horizontal, 20)
+                                .padding(.top, 22)
+                                .padding(.bottom, 150)
                             }
                             .scrollDismissesKeyboard(.interactively)
                             .onAppear {
@@ -96,17 +101,17 @@ struct AssistantView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                         .background(conversationCanvasBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.05), lineWidth: 0.8)
                         )
-                        .padding(.horizontal, 14)
-                        .padding(.bottom, 86)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 94)
                     }
                 }
 
-                bottomTalkBar
+                bottomTalkBar(safeBottom: geometry.safeAreaInsets.bottom)
 
                 if viewModel.speechManager.isRecording || viewModel.isRefiningVoiceInput {
                     recordingOverlay
@@ -118,21 +123,21 @@ struct AssistantView: View {
             CameraPicker { _ in }
                 .ignoresSafeArea()
         }
-        .confirmationDialog("快捷操作", isPresented: $showingQuickActions, titleVisibility: .visible) {
-            Button("查看今天安排") {
-                Task { await viewModel.send(text: "看看我今天的安排") }
+        .confirmationDialog("å¿«æ·æä½", isPresented: $showingQuickActions, titleVisibility: .visible) {
+            Button("æ¥çä»å¤©å®æ") {
+                Task { await viewModel.send(text: "ççæä»å¤©çå®æ") }
             }
-            Button("新建拍摄安排") {
-                manualInput = "帮我新建一个拍摄安排："
+            Button("æ°å»ºææå®æ") {
+                manualInput = "å¸®ææ°å»ºä¸ä¸ªææå®æï¼"
                 isTextFieldFocused = true
             }
-            Button("总结本周安排") {
-                Task { await viewModel.send(text: "总结一下我这周的安排") }
+            Button("æ»ç»æ¬å¨å®æ") {
+                Task { await viewModel.send(text: "æ»ç»ä¸ä¸æè¿å¨çå®æ") }
             }
-            Button("取消", role: .cancel) {}
+            Button("åæ¶", role: .cancel) {}
         }
         .confirmationDialog(
-            "改重复",
+            "æ¹éå¤",
             isPresented: Binding(
                 get: { repeatPreview != nil },
                 set: { if !$0 { repeatPreview = nil } }
@@ -147,25 +152,25 @@ struct AssistantView: View {
                     repeatPreview = nil
                 }
             }
-            Button("取消", role: .cancel) {
+            Button("åæ¶", role: .cancel) {
                 repeatPreview = nil
             }
         }
         .confirmationDialog(
-            "删除这条安排？",
+            "å é¤è¿æ¡å®æï¼",
             isPresented: Binding(
                 get: { deletePreview != nil },
                 set: { if !$0 { deletePreview = nil } }
             ),
             titleVisibility: .visible
         ) {
-            Button("删除", role: .destructive) {
+            Button("å é¤", role: .destructive) {
                 if let preview = deletePreview {
                     viewModel.delete(preview: preview)
                 }
                 deletePreview = nil
             }
-            Button("取消", role: .cancel) {
+            Button("åæ¶", role: .cancel) {
                 deletePreview = nil
             }
         }
@@ -173,9 +178,9 @@ struct AssistantView: View {
             NavigationStack {
                 VStack(spacing: 18) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("拍摄地点")
+                        Text("ææå°ç¹")
                             .font(.headline)
-                        TextField("例如：外滩源 2 号门", text: $locationDraft, axis: .vertical)
+                        TextField("ä¾å¦ï¼å¤æ»©æº 2 å·é¨", text: $locationDraft, axis: .vertical)
                             .textFieldStyle(.plain)
                             .padding(16)
                             .background(
@@ -187,16 +192,16 @@ struct AssistantView: View {
                     Spacer()
                 }
                 .padding(20)
-                .navigationTitle("加地点")
+                .navigationTitle("å å°ç¹")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("取消") {
+                        Button("åæ¶") {
                             showLocationSheet = false
                         }
                     }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("保存") {
+                        Button("ä¿å­") {
                             if let preview = editingPreview {
                                 viewModel.updateLocation(preview: preview, location: locationDraft)
                             }
@@ -211,25 +216,25 @@ struct AssistantView: View {
         .sheet(isPresented: $showTimeSheet) {
             NavigationStack {
                 VStack(alignment: .leading, spacing: 16) {
-                    DatePicker("开始", selection: $timeDraftStart, displayedComponents: [.date, .hourAndMinute])
+                    DatePicker("å¼å§", selection: $timeDraftStart, displayedComponents: [.date, .hourAndMinute])
                         .datePickerStyle(.graphical)
 
-                    DatePicker("结束", selection: $timeDraftEnd, displayedComponents: [.date, .hourAndMinute])
+                    DatePicker("ç»æ", selection: $timeDraftEnd, displayedComponents: [.date, .hourAndMinute])
                         .datePickerStyle(.graphical)
 
                     Spacer()
                 }
                 .padding(20)
-                .navigationTitle("改时间")
+                .navigationTitle("æ¹æ¶é´")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("取消") {
+                        Button("åæ¶") {
                             showTimeSheet = false
                         }
                     }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("保存") {
+                        Button("ä¿å­") {
                             if let preview = editingPreview {
                                 let end = max(timeDraftEnd, timeDraftStart.addingTimeInterval(1800))
                                 viewModel.updateTime(preview: preview, startDate: timeDraftStart, endDate: end)
@@ -259,61 +264,78 @@ struct AssistantView: View {
     }
 
     private var background: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.16, green: 0.08, blue: 0.24),
-                Color(red: 0.15, green: 0.07, blue: 0.23),
-                Color(red: 0.10, green: 0.05, blue: 0.16)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .overlay(
-            Rectangle()
-                .fill(Color.black.opacity(0.22))
-                .ignoresSafeArea()
-        )
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.08, green: 0.09, blue: 0.12),
+                    Color(red: 0.05, green: 0.06, blue: 0.09)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            LinearGradient(
+                colors: [
+                    Color(red: 0.22, green: 0.14, blue: 0.34).opacity(0.35),
+                    Color.clear,
+                    Color.black.opacity(0.25)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
         .ignoresSafeArea()
     }
 
     private var topBar: some View {
-        HStack {
-            Text("KKPP 秘书")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("KKPP")
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
 
-            Spacer(minLength: 0)
+                Text("ç§äººæ¶é´å©æ")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.46))
+            }
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(connectionColor)
+                    .frame(width: 7, height: 7)
+
+                Text(connectionLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.78))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.white.opacity(0.06))
+            .clipShape(Capsule(style: .continuous))
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var conversationCanvasBackground: some View {
-        LinearGradient(
-            colors: [
-                Color.black.opacity(0.26),
-                Color.black.opacity(0.34),
-                Color.black.opacity(0.48)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+        RoundedRectangle(cornerRadius: 30, style: .continuous)
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.05),
+                        Color.white.opacity(0.025),
+                        Color.black.opacity(0.18)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
     }
 
-    private func topIconButton(systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(.white.opacity(0.88))
-                .frame(width: 32, height: 32)
-                .background(Color.white.opacity(0.06))
-                .clipShape(Circle())
-        }
-        .buttonStyle(.plain)
-    }
 
     private var signInCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("现在不登录也能直接用。登录 Apple 账号后，身份与多设备体验会更完整。")
+            Text("ç°å¨ä¸ç»å½ä¹è½ç´æ¥ç¨ãç»å½ Apple è´¦å·åï¼èº«ä»½ä¸å¤è®¾å¤ä½éªä¼æ´å®æ´ã")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.88))
 
@@ -343,118 +365,107 @@ struct AssistantView: View {
         )
     }
 
-    private var permissionsCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private var compactPermissionsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("设备能力")
+                Text("è®¾å¤è½å")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.white.opacity(0.50))
+
                 Spacer()
-                Button("一键开启") {
+
+                Button("ä¸é®å¼å¯") {
                     Task { await requestAllCapabilities() }
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.92))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(Color(red: 0.07, green: 0.76, blue: 0.60).opacity(0.25))
-                )
-                .buttonStyle(.plain)
+                .foregroundStyle(.white.opacity(0.86))
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    permissionButton("麦克风", granted: viewModel.speechManager.microphoneAuthorized) {
+                    permissionButton("éº¦åé£", granted: viewModel.speechManager.microphoneAuthorized) {
                         Task {
                             await viewModel.speechManager.requestPermissions()
                             permissionManager.refreshStatuses()
                         }
                     }
-                    permissionButton("语音", granted: viewModel.speechManager.speechAuthorized) {
+
+                    permissionButton("è¯­é³", granted: viewModel.speechManager.speechAuthorized) {
                         Task {
                             await viewModel.speechManager.requestPermissions()
                             permissionManager.refreshStatuses()
                         }
                     }
-                    permissionButton("日历", granted: calendarManager.hasReadAccess || calendarManager.hasWriteAccess) {
+
+                    permissionButton("æ¥å", granted: calendarManager.hasReadAccess || calendarManager.hasWriteAccess) {
                         Task {
                             _ = await calendarManager.requestAccess()
                             permissionManager.refreshStatuses()
                         }
                     }
-                    permissionButton("定位", granted: locationWeatherManager.hasLocationAccess) {
+
+                    permissionButton("å®ä½", granted: locationWeatherManager.hasLocationAccess) {
                         locationWeatherManager.requestWhenInUseAccess()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                             locationWeatherManager.refresh()
                         }
                     }
-                    permissionButton("通知", granted: permissionManager.notificationStatus == .authorized || permissionManager.notificationStatus == .provisional) {
-                        Task {
-                            _ = await permissionManager.requestNotifications()
-                            permissionManager.refreshStatuses()
-                        }
-                    }
-                    permissionButton("提醒事项", granted: permissionManager.reminderStatus == .fullAccess || permissionManager.reminderStatus == .writeOnly) {
-                        Task {
-                            _ = await permissionManager.requestReminders()
-                            permissionManager.refreshStatuses()
-                        }
-                    }
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.04))
+        .padding(16)
+        .background(Color.white.opacity(0.035))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.05), lineWidth: 0.8)
         )
     }
 
     private func landingCanvas(minHeight: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("你的私人时间台")
+        VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("ææ¶é´äº¤ç»ææ´ç")
                     .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
 
-                Text("按住底部麦克风直接说需求，我会先理解，再帮你整理成日程、提醒和待确认动作。")
+                Text("ç´æ¥è¯´éæ±ï¼æä¼å¸®ä½ çè§£ãæè§£ï¼å¹¶æ´çææ¥ç¨ä¸å¾ç¡®è®¤å¨ä½ã")
                     .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.68))
+                    .foregroundStyle(.white.opacity(0.62))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 landingMetric(
-                    title: "连接状态",
+                    title: "è¿æ¥ç¶æ",
                     value: connectionLabel,
                     tint: connectionColor
                 )
+
                 landingMetric(
-                    title: "天气",
+                    title: "å¤©æ°",
                     value: locationWeatherManager.weatherSummary,
                     tint: Color(hex: 0x60A5FA)
                 )
             }
 
-            permissionsCard
+            compactPermissionsCard
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("你可以直接这样说")
+            VStack(alignment: .leading, spacing: 12) {
+                Text("è¯çè¿æ ·è¯´")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.58))
+                    .foregroundStyle(.white.opacity(0.48))
 
                 VStack(spacing: 10) {
-                    landingPromptRow("明天下午三点和摄影棚确认拍摄档期")
-                    landingPromptRow("下周一上午提醒我带镜头去外景")
-                    landingPromptRow("看看我今天还有哪些安排")
+                    landingPromptRow("æå¤©ä¸åä¸ç¹åæå½±æ£ç¡®è®¤æææ¡£æ")
+                    landingPromptRow("ä¸å¨ä¸ä¸åæéæå¸¦éå¤´å»å¤æ¯")
+                    landingPromptRow("ççæä»å¤©è¿æåªäºå®æ")
                 }
             }
+
+            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
-        .padding(.vertical, 10)
     }
 
     private func landingMetric(title: String, value: String, tint: Color) -> some View {
@@ -473,15 +484,9 @@ struct AssistantView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.04))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
-        )
+        .padding(16)
+        .background(Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private func landingPromptRow(_ text: String) -> some View {
@@ -533,13 +538,13 @@ struct AssistantView: View {
     }
 
     private var shouldShowLandingCanvas: Bool {
-        viewModel.messages.count <= 1 && !viewModel.isProcessing && !viewModel.isRefiningVoiceInput
+        viewModel.messages.isEmpty && !viewModel.isProcessing && !viewModel.isRefiningVoiceInput
     }
 
     private var inlineStatusCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("处理中…")
+                Text("å¤çä¸­â¦")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.58))
                 Text(statusSummaryText)
@@ -580,31 +585,31 @@ struct AssistantView: View {
     private var statusSummaryText: String {
         if let last = displayAnalysisSteps.last {
             switch last {
-            case "连接云端":
-                return "正在连接云端助手。"
-            case "整理上下文":
-                return "正在整理你的时间、上下文和设备信息。"
-            case "理解需求":
-                return "正在理解这次安排的真实意图。"
-            case "拆解日程":
-                return "正在拆解这次日程请求。"
-            case "查询日历":
-                return "正在查看你的日历安排。"
-            case "写入日历":
-                return "正在把确认后的结果写入系统日历。"
-            case "等待确认":
-                return "我已经整理好方案，等你确认。"
+            case "è¿æ¥äºç«¯":
+                return "æ­£å¨è¿æ¥äºç«¯å©æã"
+            case "æ´çä¸ä¸æ":
+                return "æ­£å¨æ´çä½ çæ¶é´ãä¸ä¸æåè®¾å¤ä¿¡æ¯ã"
+            case "çè§£éæ±":
+                return "æ­£å¨çè§£è¿æ¬¡å®æççå®æå¾ã"
+            case "æè§£æ¥ç¨":
+                return "æ­£å¨æè§£è¿æ¬¡æ¥ç¨è¯·æ±ã"
+            case "æ¥è¯¢æ¥å":
+                return "æ­£å¨æ¥çä½ çæ¥åå®æã"
+            case "åå¥æ¥å":
+                return "æ­£å¨æç¡®è®¤åçç»æåå¥ç³»ç»æ¥åã"
+            case "ç­å¾ç¡®è®¤":
+                return "æå·²ç»æ´çå¥½æ¹æ¡ï¼ç­ä½ ç¡®è®¤ã"
             default:
-                return "正在为你生成更合适的安排。"
+                return "æ­£å¨ä¸ºä½ çææ´åéçå®æã"
             }
         }
 
-        return "正在为你生成更合适的安排。"
+        return "æ­£å¨ä¸ºä½ çææ´åéçå®æã"
     }
 
     private func statusRow(title: String, isDone: Bool) -> some View {
         HStack(spacing: 8) {
-            Text(isDone ? "✓" : "Q")
+            Text(isDone ? "â" : "Q")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(isDone ? Color(hex: 0x10B981) : Color.white.opacity(0.45))
             Text(title)
@@ -634,9 +639,13 @@ struct AssistantView: View {
         )
     }
 
-    private var bottomTalkBar: some View {
+    private func bottomTalkBar(safeBottom: CGFloat) -> some View {
         HStack(spacing: 12) {
-            darkIconButton(systemImage: manualInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "mic.fill" : "arrow.up") {
+            darkIconButton(
+                systemImage: manualInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? "mic.fill"
+                    : "arrow.up"
+            ) {
                 if manualInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     if viewModel.speechManager.isRecording {
                         Task { await stopVoiceFlow() }
@@ -654,25 +663,22 @@ struct AssistantView: View {
                 onOpenSchedule()
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 12)
-        .padding(.top, 8)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color.black.opacity(0),
-                    Color.black.opacity(0.18),
-                    Color.black.opacity(0.64)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Color.black.opacity(0.42))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.06), lineWidth: 0.8)
         )
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
+        .padding(.horizontal, 14)
+        .padding(.bottom, max(safeBottom, 10))
     }
 
     private var textComposerField: some View {
         HStack(spacing: 10) {
-            TextField("说点什么…", text: $manualInput, axis: .vertical)
+            TextField("è¯´ç¹ä»ä¹â¦", text: $manualInput, axis: .vertical)
                 .textFieldStyle(.plain)
                 .focused($isTextFieldFocused)
                 .lineLimit(1 ... 3)
@@ -680,15 +686,16 @@ struct AssistantView: View {
                 .submitLabel(.send)
                 .onSubmit { sendManualInput() }
         }
+        .padding(.horizontal, 16)
         .frame(maxWidth: .infinity)
         .frame(height: 48)
-        .background(Color.white.opacity(0.06))
+        .background(Color.white.opacity(0.055))
         .clipShape(Capsule(style: .continuous))
     }
 
     private var voiceHoldButton: some View {
         HStack(spacing: 10) {
-            Text(viewModel.speechManager.isRecording || isHoldingVoice ? "松开发送" : "按住说话")
+            Text(viewModel.speechManager.isRecording || isHoldingVoice ? "æ¾å¼åé" : "æä½è¯´è¯")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.92))
         }
@@ -715,9 +722,9 @@ struct AssistantView: View {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(.white.opacity(0.92))
-                .frame(width: 38, height: 38)
-                .background(Color.white.opacity(0.06))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .frame(width: 42, height: 42)
+                .background(Color.white.opacity(0.07))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -749,7 +756,7 @@ struct AssistantView: View {
                             .foregroundStyle(.white)
                     }
 
-                    Text(viewModel.isRefiningVoiceInput ? "正在整理成更好的表达" : "recording")
+                    Text(viewModel.isRefiningVoiceInput ? "æ­£å¨æ´çææ´å¥½çè¡¨è¾¾" : "recording")
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.6))
                 }
@@ -821,11 +828,11 @@ struct AssistantView: View {
     private var connectionLabel: String {
         switch viewModel.connectionState {
         case .checking:
-            "连接中"
+            "è¿æ¥ä¸­"
         case .connected:
-            "在线"
+            "å¨çº¿"
         case .disconnected:
-            "离线"
+            "ç¦»çº¿"
         }
     }
 
@@ -849,12 +856,12 @@ struct AssistantView: View {
 
     private func promptText(for title: String) -> String {
         switch title {
-        case "今天安排":
-            "看看我今天的安排"
-        case "新建拍摄":
-            "帮我新建一个拍摄安排"
-        case "总结本周":
-            "总结一下我这周的安排"
+        case "ä»å¤©å®æ":
+            "ççæä»å¤©çå®æ"
+        case "æ°å»ºææ":
+            "å¸®ææ°å»ºä¸ä¸ªææå®æ"
+        case "æ»ç»æ¬å¨":
+            "æ»ç»ä¸ä¸æè¿å¨çå®æ"
         default:
             title
         }
@@ -929,7 +936,7 @@ struct AssistantView: View {
 
     private func handleAddLocation(_ preview: ChatMessage.SchedulePreview) {
         editingPreview = preview
-        locationDraft = preview.location.replacingOccurrences(of: "📌 ", with: "")
+        locationDraft = preview.location.replacingOccurrences(of: "ð ", with: "")
         showLocationSheet = true
     }
 
