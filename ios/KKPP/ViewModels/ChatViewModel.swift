@@ -8,9 +8,7 @@ final class ChatViewModel: ObservableObject {
         case disconnected(String)
     }
 
-    @Published var messages: [ChatMessage] = [
-        ChatMessage(role: .assistant, content: "你好，我是 KKPP。按住下方麦克风，直接告诉我你的日程安排，我会像私人秘书一样帮你处理。")
-    ]
+    @Published var messages: [ChatMessage] = []
     @Published var liveTranscript = ""
     @Published var isProcessing = false
     @Published var errorMessage: String?
